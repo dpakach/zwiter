@@ -11,5 +11,5 @@ func main() {
 
 	cc, c := client.NewUsersClient()
 	defer cc.Close()
-	client.CreateUser(c)
+	client.CreateUser(c, "testuser")
 }

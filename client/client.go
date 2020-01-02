@@ -31,9 +31,9 @@ func NewUsersClient() (*grpc.ClientConn, userspb.UsersServiceClient) {
 }
 
 // CreatePost create a new post
-func CreatePost(c postspb.PostsServiceClient) {
+func CreatePost(c postspb.PostsServiceClient, content string) {
 	req := &postspb.CreatePostRequest{
-		Text:     "This is a sample Post",
+		Text:     content,
 		AuthorId: 1,
 	}
 
@@ -57,9 +57,9 @@ func GetPosts(c postspb.PostsServiceClient) {
 }
 
 // GetPost Get one post by Id
-func GetPost(c postspb.PostsServiceClient) {
+func GetPost(c postspb.PostsServiceClient, id int64) {
 	req := &postspb.GetPostRequest{
-		Id: 1,
+		Id: id,
 	}
 	res, err := c.GetPost(context.Background(), req)
 	if err != nil {
@@ -69,9 +69,9 @@ func GetPost(c postspb.PostsServiceClient) {
 }
 
 // CreateUser create a new user
-func CreateUser(c userspb.UsersServiceClient) {
+func CreateUser(c userspb.UsersServiceClient, username string) {
 	req := &userspb.CreateUserRequest{
-		Username: "SampleUser",
+		Username: username,
 	}
 
 	res, err := c.CreateUser(context.Background(), req)
@@ -93,9 +93,9 @@ func GetUsers(c userspb.UsersServiceClient) {
 }
 
 // GetUser Get one user by Id
-func GetUser(c userspb.UsersServiceClient) {
+func GetUser(c userspb.UsersServiceClient, id int64) {
 	req := &userspb.GetUserRequest{
-		Id: 1,
+		Id: id,
 	}
 	res, err := c.GetUser(context.Background(), req)
 	if err != nil {
