@@ -1,0 +1,42 @@
+syntax="proto3";
+
+package userspb;
+
+option go_package = "userspb";
+
+message EmptyData {}
+
+message CreateUserRequest {
+	string username=1;
+}
+
+message CreateUserResponse {
+	int64 id=1;
+	string username=2;
+	int64 created=3;
+}
+
+message GetUsersResponse {
+	message User {
+		int64 id=1;
+		string username=2;
+		int64 created=3;
+	}
+	repeated User users=1;
+}
+
+message GetUserRequest {
+	int64 id=1;
+}
+
+message GetUserResponse {
+	int64 id=1;
+	string username=2;
+	int64 created=3;
+}
+
+service UsersService {
+	rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {};
+	rpc GetUsers(EmptyData) returns (GetUsersResponse) {};
+	rpc GetUser(GetUserRequest) returns (GetUserResponse) {};
+}

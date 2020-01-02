@@ -1,0 +1,54 @@
+syntax="proto3";
+
+package postspb;
+
+option go_package = "postspb";
+
+message EmptyData {}
+
+message CreatePostRequest {
+	string text=1;
+	int64 authorId=2;
+}
+
+message CreatePostResponse {
+	int64 id=1;
+	string text=2;
+	int64 created=3;
+	int64 authorId=4;
+}
+
+message GetPostsResponse {
+	message User {
+		int64 id=1;
+		string username=2;
+	}
+	message Post {
+		int64 id=1;
+		string text=2;
+		int64 created=3;
+		User author=4;
+	}
+	repeated Post posts=1;
+}
+
+message GetPostRequest {
+	int64 id=1;
+}
+
+message GetPostResponse {
+	int64 id=1;
+	string text=2;
+	int64 created=3;
+	message User {
+		int64 id=1;
+		string username=2;
+	}
+	User author=4;
+}
+
+service PostsService {
+	rpc CreatePost(CreatePostRequest) returns (CreatePostResponse) {};
+	rpc GetPosts(EmptyData) returns (GetPostsResponse) {};
+	rpc GetPost(GetPostRequest) returns (GetPostResponse) {};
+}
