@@ -1,6 +1,8 @@
 posts.json
 users.json
 
+build/
+
 # Binaries for programs and plugins
 *.exe
 *.exe~
