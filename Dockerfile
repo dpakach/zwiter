@@ -3,6 +3,11 @@ FROM golang:latest
 
 # service type
 ENV service users
+ENV USER_HOST zusers
+ENV USER_PORT 8002
+ENV POST_HOST zposts
+ENV POST_PORT 8001
+
 
 # Configure GOPATH and project path
 RUN mkdir -p $GOPATH/src/github.com/dpakach/zwiter
@@ -15,10 +20,6 @@ RUN go get google.golang.org/grpc
 
 # Setup project
 RUN make initialize
-
-# Expose required Ports
-EXPOSE 8001
-EXPOSE 8002
 
 # Running the project
 CMD make $service

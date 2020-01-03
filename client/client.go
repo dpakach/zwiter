@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/dpakach/zwiter/posts/postspb"
 	"github.com/dpakach/zwiter/users/userspb"
@@ -11,9 +12,37 @@ import (
 	"google.golang.org/grpc"
 )
 
+func getAddr(service string) string {
+	switch(service) {
+	case "users":
+		host := os.Getenv("USER_HOST")
+		port := os.Getenv("USER_PORT")
+		if host == "" {
+			host = "127.0.0.1"
+		}
+		if port == "" {
+			port = "8002"
+		}
+		return host + ":" + port
+	case "posts":
+		host := os.Getenv("POST_HOST")
+		port := os.Getenv("POST_PORT")
+		if host == "" {
+			host = "127.0.0.1"
+		}
+		if port == "" {
+			port = "8001"
+		}
+		return host + ":" + port
+	}
+	return ""
+}
+
 // NewPostsClient creates new client for Post service
 func NewPostsClient() (*grpc.ClientConn, postspb.PostsServiceClient) {
-	cc, err := grpc.Dial("localhost:8001", grpc.WithInsecure())
+	addr := getAddr("posts")
+	fmt.Println(addr)
+	cc, err := grpc.Dial(addr, grpc.WithInsecure())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -22,11 +51,12 @@ func NewPostsClient() (*grpc.ClientConn, postspb.PostsServiceClient) {
 
 // NewUsersClient creates a new client for the users service
 func NewUsersClient() (*grpc.ClientConn, userspb.UsersServiceClient) {
-	cc, err := grpc.Dial("localhost:8002", grpc.WithInsecure())
+	addr := getAddr("users")
+	fmt.Println(addr)
+	cc, err := grpc.Dial(addr, grpc.WithInsecure())
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	return cc, userspb.NewUsersServiceClient(cc)
 }
 
