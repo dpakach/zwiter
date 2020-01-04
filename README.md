@@ -3,23 +3,30 @@ Zwiter is a very simple system with different services for `users` and `posts` u
 
 # Running
 For running zwitter follow following steps
-- 1 - Clone this repository
 
-    `go get -u github.com/dpakach/zwiter`
-- 2 - Change directory to the project path
+### 1 - Clone this repository
 
-    `cd $GOPATH/src/github.com/dpakach/zwiter`
-- 3 - Initialize stores
+    go get -u github.com/dpakach/zwiter
+### 2 - Change directory to the project path
 
-    `make initialize`
-- 4 - Run the Services
+    cd $GOPATH/src/github.com/dpakach/zwiter
+### 3 - Initialize store files
 
-    For User service
+    make initialize
+### 4 - Run the Services
+
+#### a. For User service
+
+    make users
+
+#### b. For Posts service
     
-        make users
-    For Posts service
-        
-        make posts
+    make posts
         
 ## Running using Docker
 For running using docker refer to [ this guide ](https://github.com/dpakach/zwiter/blob/master/docker_run.md)
+
+## TODO
+1. Add Authentication or Authorization
+2. Refactor Store into a different Service
+3. CLI client
