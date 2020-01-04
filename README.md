@@ -1,0 +1,25 @@
+# zwiter
+Zwiter is a very simple system with different services for `users` and `posts` using simple json files for data storage and grpc and protocol buffers for communication between the services
+
+# Running
+For running zwitter follow following steps
+- 1 - Clone this repository
+
+    `go get -u github.com/dpakach/zwiter`
+- 2 - Change directory to the project path
+
+    `cd $GOPATH/src/github.com/dpakach/zwiter`
+- 3 - Initialize stores
+
+    `make initialize`
+- 4 - Run the Services
+
+    For User service
+    
+        make users
+    For Posts service
+        
+        make posts
+        
+## Running using Docker
+For running using docker refer to [ this guide ](https://github.com/dpakach/zwiter/blob/master/docker_run.md)
