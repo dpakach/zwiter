@@ -1,7 +1,17 @@
-.PHONY: server-post server-user server-all initialize-users
+.PHONY: server-post server-user server-all initialize-users users posts build
 
 POSTS_FILE = posts.json
 USERS_FILE = users.json
+
+build:
+	@go build -o ./build/posts posts/server/server.go
+	@go build -o ./build/users users/server/server.go
+
+posts: build
+	./build/posts posts.json
+
+users: build
+	./build/users users.json
 
 server-post:
 	go run posts/server/server.go $(POSTS_FILE)
@@ -31,3 +41,7 @@ initialize-users:
 
 initialize: initialize-users initialize-posts
 	@echo "Initializing Store files"
+
+clean:
+	@rm $(POSTS_FILE)
+	@rm $(USERS_FILE)
