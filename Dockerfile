@@ -1,5 +1,5 @@
 # from base image golang:latest
-FROM golang:latest 
+FROM golang:latest
 
 # service type
 ENV service users

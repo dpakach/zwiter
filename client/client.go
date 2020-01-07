@@ -3,7 +3,6 @@ package client
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"os"
 
@@ -42,7 +41,6 @@ func getAddr(service string) string {
 // NewPostsClient creates new client for Post service
 func NewPostsClient() (*grpc.ClientConn, postspb.PostsServiceClient) {
 	addr := getAddr("posts")
-	fmt.Println(addr)
 	cc, err := grpc.Dial(addr, grpc.WithInsecure())
 	if err != nil {
 		log.Fatal(err)
@@ -53,7 +51,6 @@ func NewPostsClient() (*grpc.ClientConn, postspb.PostsServiceClient) {
 // NewUsersClient creates a new client for the users service
 func NewUsersClient() (*grpc.ClientConn, userspb.UsersServiceClient) {
 	addr := getAddr("users")
-	fmt.Println(addr)
 	cc, err := grpc.Dial(addr, grpc.WithInsecure())
 	if err != nil {
 		log.Fatal(err)
@@ -70,7 +67,6 @@ func CreatePost(c postspb.PostsServiceClient, content string) []byte {
 
 	res, err := c.CreatePost(context.Background(), req)
 	if err != nil {
-		fmt.Println(err)
 		log.Fatal(err)
 	}
 	return getJSON(res)

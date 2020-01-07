@@ -101,7 +101,6 @@ func (p *User) SaveToStore(store *store.Store) int64 {
 type server struct{}
 
 func (s *server) CreateUser(ctx context.Context, req *userspb.CreateUserRequest) (*userspb.CreateUserResponse, error) {
-	fmt.Println("Creating new User")
 	ts := time.Now().Unix()
 	user := User{Username: req.GetUsername(), Created: int64(ts)}
 	id := user.SaveToStore(UserStore)
@@ -127,7 +126,6 @@ func (s *server) GetUsers(ctx context.Context, req *userspb.EmptyData) (*userspb
 			Created:  user.Created,
 		})
 	}
-	fmt.Println(users)
 	return &userspb.GetUsersResponse{
 		Users: resp,
 	}, nil
