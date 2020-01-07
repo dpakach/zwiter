@@ -1,4 +1,4 @@
-.PHONY: server-post server-user server-all initialize-users users posts build
+.PHONY: server-post server-user server-all initialize-users users posts build build-client
 
 POSTS_FILE = posts.json
 USERS_FILE = users.json
@@ -6,6 +6,9 @@ USERS_FILE = users.json
 build:
 	@go build -o ./build/posts posts/server/server.go
 	@go build -o ./build/users users/server/server.go
+
+build-client:
+	@go build -o ./build/zclient cmd/zclient/main.go
 
 posts: build
 	./build/posts posts.json

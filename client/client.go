@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -13,7 +14,7 @@ import (
 )
 
 func getAddr(service string) string {
-	switch(service) {
+	switch service {
 	case "users":
 		host := os.Getenv("USER_HOST")
 		port := os.Getenv("USER_PORT")
@@ -61,7 +62,7 @@ func NewUsersClient() (*grpc.ClientConn, userspb.UsersServiceClient) {
 }
 
 // CreatePost create a new post
-func CreatePost(c postspb.PostsServiceClient, content string) {
+func CreatePost(c postspb.PostsServiceClient, content string) []byte {
 	req := &postspb.CreatePostRequest{
 		Text:     content,
 		AuthorId: 1,
@@ -72,22 +73,22 @@ func CreatePost(c postspb.PostsServiceClient, content string) {
 		fmt.Println(err)
 		log.Fatal(err)
 	}
-	log.Printf("Respnse from Server: %v", res)
+	return getJSON(res)
 }
 
 // GetPosts Get all posts
-func GetPosts(c postspb.PostsServiceClient) {
+func GetPosts(c postspb.PostsServiceClient) []byte {
 	req := &postspb.EmptyData{}
 
 	res, err := c.GetPosts(context.Background(), req)
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("Respnse from Server: %v", res)
+	return getJSON(res)
 }
 
 // GetPost Get one post by Id
-func GetPost(c postspb.PostsServiceClient, id int64) {
+func GetPost(c postspb.PostsServiceClient, id int64) []byte {
 	req := &postspb.GetPostRequest{
 		Id: id,
 	}
@@ -95,11 +96,11 @@ func GetPost(c postspb.PostsServiceClient, id int64) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("Respnse from Server: %v", res)
+	return getJSON(res)
 }
 
 // CreateUser create a new user
-func CreateUser(c userspb.UsersServiceClient, username string) {
+func CreateUser(c userspb.UsersServiceClient, username string) []byte {
 	req := &userspb.CreateUserRequest{
 		Username: username,
 	}
@@ -108,22 +109,22 @@ func CreateUser(c userspb.UsersServiceClient, username string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("Response from Server: %v", res)
+	return getJSON(res)
 }
 
 // GetUsers Get all users
-func GetUsers(c userspb.UsersServiceClient) {
+func GetUsers(c userspb.UsersServiceClient) []byte {
 	req := &userspb.EmptyData{}
 
 	res, err := c.GetUsers(context.Background(), req)
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("Respnse from Server: %v", res)
+	return getJSON(res)
 }
 
 // GetUser Get one user by Id
-func GetUser(c userspb.UsersServiceClient, id int64) {
+func GetUser(c userspb.UsersServiceClient, id int64) []byte {
 	req := &userspb.GetUserRequest{
 		Id: id,
 	}
@@ -131,5 +132,13 @@ func GetUser(c userspb.UsersServiceClient, id int64) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("Respnse from Server: %v", res)
+	return getJSON(res)
+}
+
+func getJSON(res interface{}) []byte {
+	json, err := json.MarshalIndent(res, "", "	")
+	if err != nil {
+		log.Fatal(err)
+	}
+	return json
 }
