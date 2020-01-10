@@ -8,8 +8,12 @@ import (
 
 	"github.com/dpakach/zwiter/posts/postspb"
 	"github.com/dpakach/zwiter/users/userspb"
+	"golang.org/x/oauth2"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/oauth"
+	"google.golang.org/grpc/testdata"
 )
 
 func getAddr(service string) string {
@@ -38,10 +42,40 @@ func getAddr(service string) string {
 	return ""
 }
 
+// fetchToken simulates a token lookup and omits the details of proper token
+// acquisition. For examples of how to acquire an OAuth2 token, see:
+// https://godoc.org/golang.org/x/oauth2
+func fetchToken() *oauth2.Token {
+	return &oauth2.Token{
+		AccessToken: "some-secret-token",
+	}
+}
+
+func getOpts() []grpc.DialOption {
+	// Set up the credentials for the connection.
+	perRPC := oauth.NewOauthAccess(fetchToken())
+	creds, err := credentials.NewClientTLSFromFile(testdata.Path("ca.pem"), "x.test.youtube.com")
+	if err != nil {
+		log.Fatalf("failed to load credentials: %v", err)
+	}
+	opts := []grpc.DialOption{
+		// In addition to the following grpc.DialOption, callers may also use
+		// the grpc.CallOption grpc.PerRPCCredentials with the RPC invocation
+		// itself.
+		// See: https://godoc.org/google.golang.org/grpc#PerRPCCredentials
+		grpc.WithPerRPCCredentials(perRPC),
+		// oauth.NewOauthAccess requires the configuration of transport
+		// credentials.
+		grpc.WithTransportCredentials(creds),
+	}
+	return opts
+}
+
 // NewPostsClient creates new client for Post service
 func NewPostsClient() (*grpc.ClientConn, postspb.PostsServiceClient) {
 	addr := getAddr("posts")
-	cc, err := grpc.Dial(addr, grpc.WithInsecure())
+	opts := getOpts()
+	cc, err := grpc.Dial(addr, opts...)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -51,7 +85,8 @@ func NewPostsClient() (*grpc.ClientConn, postspb.PostsServiceClient) {
 // NewUsersClient creates a new client for the users service
 func NewUsersClient() (*grpc.ClientConn, userspb.UsersServiceClient) {
 	addr := getAddr("users")
-	cc, err := grpc.Dial(addr, grpc.WithInsecure())
+	opts := getOpts()
+	cc, err := grpc.Dial(addr, opts...)
 	if err != nil {
 		log.Fatal(err)
 	}
