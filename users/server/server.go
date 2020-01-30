@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -83,6 +84,7 @@ type User struct {
 	ID       int64  `json:"id"`
 	Username string `json:"username"`
 	Created  int64  `json:"created"`
+	Password string `json:"password"`
 }
 
 // GetID returns ID of the user
@@ -105,11 +107,17 @@ func (p *User) SaveToStore(store *store.Store) int64 {
 	return id
 }
 
+// NewSHA256 ...
+func NewSHA256(data string) string {
+	hash := sha256.Sum256([]byte(data))
+	return string(hash[:])
+}
+
 type server struct{}
 
 func (s *server) CreateUser(ctx context.Context, req *userspb.CreateUserRequest) (*userspb.CreateUserResponse, error) {
 	ts := time.Now().Unix()
-	user := User{Username: req.GetUsername(), Created: int64(ts)}
+	user := User{Username: req.GetUsername(), Created: int64(ts), Password: NewSHA256(req.GetPassword())}
 	id := user.SaveToStore(UserStore)
 
 	created := &Users{}

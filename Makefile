@@ -2,6 +2,7 @@
 
 POSTS_FILE = posts.json
 USERS_FILE = users.json
+TOKENS_FILE = tokens.json
 
 build:
 	@go build -o ./build/posts posts/server/server.go
@@ -16,19 +17,26 @@ posts: build
 users: build
 	./build/users users.json
 
+auth: build
+	./build/users tokens.json
+
 server-post:
 	go run posts/server/server.go $(POSTS_FILE)
 
 server-user:
 	go run users/server/server.go $(USERS_FILE)
 
+server-auth:
+	go run auth/server/server.go $(TOKENS_FILE)
+
 server-all:
 	@echo "Running all servers"
-	make -j 2 server-post server-user
+	make -j 3 server-post server-user server-auth
 
 generate-pb:
 	protoc ./posts/postspb/posts.proto --go_out=plugins=grpc:.
 	protoc ./users/userspb/users.proto --go_out=plugins=grpc:.
+	protoc ./auth/authpb/auth.proto --go_out=plugins=grpc:.
 
 initialize-posts:
 	@if test -f $(POSTS_FILE); then \
@@ -42,9 +50,16 @@ initialize-users:
 	fi; \
 	echo "{\"users\": []}" >> $(USERS_FILE);
 
-initialize: initialize-users initialize-posts
+initialize-auth:
+	@if test -f $(TOKENS_FILE); then \
+		> $(TOKENS_FILE); \
+	fi; \
+	echo "{\"tokens\": []}" >> $(TOKENS_FILE);
+
+initialize: initialize-users initialize-posts initialize-auth
 	@echo "Initializing Store files"
 
 clean:
 	@rm $(POSTS_FILE)
 	@rm $(USERS_FILE)
+	@rm $(TOKENS_FILE)

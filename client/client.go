@@ -8,8 +8,9 @@ import (
 
 	"github.com/dpakach/zwiter/posts/postspb"
 	"github.com/dpakach/zwiter/users/userspb"
-	"golang.org/x/oauth2"
+	"github.com/dpakach/zwiter/auth/authpb"
 
+	"golang.org/x/oauth2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/oauth"
@@ -36,6 +37,16 @@ func getAddr(service string) string {
 		}
 		if port == "" {
 			port = "8001"
+		}
+		return host + ":" + port
+	case "auth":
+		host := os.Getenv("AUTH_HOST")
+		port := os.Getenv("AUTH_PORT")
+		if host == "" {
+			host = "127.0.0.1"
+		}
+		if port == "" {
+			port = "8003"
 		}
 		return host + ":" + port
 	}
@@ -93,6 +104,16 @@ func NewUsersClient() (*grpc.ClientConn, userspb.UsersServiceClient) {
 	return cc, userspb.NewUsersServiceClient(cc)
 }
 
+// NewUsersClient creates a new client for the users service
+func NewAuthClient() (*grpc.ClientConn, authpb.AuthServiceClient) {
+	addr := getAddr("auth")
+	cc, err := grpc.Dial(addr, grpc.WithInsecure())
+	if err != nil {
+		log.Fatal(err)
+	}
+	return cc, authpb.NewAuthServiceClient(cc)
+}
+
 // CreatePost create a new post
 func CreatePost(c postspb.PostsServiceClient, content string) []byte {
 	req := &postspb.CreatePostRequest{
@@ -131,9 +152,10 @@ func GetPost(c postspb.PostsServiceClient, id int64) []byte {
 }
 
 // CreateUser create a new user
-func CreateUser(c userspb.UsersServiceClient, username string) []byte {
+func CreateUser(c userspb.UsersServiceClient, username string, password string) []byte {
 	req := &userspb.CreateUserRequest{
 		Username: username,
+		Password: password,
 	}
 
 	res, err := c.CreateUser(context.Background(), req)
@@ -160,6 +182,20 @@ func GetUser(c userspb.UsersServiceClient, id int64) []byte {
 		Id: id,
 	}
 	res, err := c.GetUser(context.Background(), req)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return getJSON(res)
+}
+
+// CreatePost create a new post
+func CreateToken(c authpb.AuthServiceClient, username string, password string) []byte {
+	req := &authpb.CreateTokenRequest{
+		Username:     username,
+		Password:     password,
+	}
+
+	res, err := c.CreateToken(context.Background(), req)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -24,16 +24,45 @@ func info() {
 func commands() {
 	app.Commands = []cli.Command{
 		{
+			Name:    "create-token",
+			Aliases: []string{"tc"},
+			Usage:   "Create a new Token",
+			Flags: []cli.Flag {
+				&cli.StringFlag{
+					Name: "password",
+					Value: "pass1234",
+					Usage: "Password for new User",
+				},
+			},
+			Action: func(c *cli.Context) error {
+				cc, ac := client.NewAuthClient()
+				defer cc.Close()
+				if c.NArg() < 1 {
+					return errors.New("Not Enough arguments to create token. provide username")
+				}
+				token := client.CreateToken(ac, c.Args().Get(0), c.String("password"))
+				log.Printf("Response from server:\n%v\n", string(token))
+				return nil
+			},
+		},
+		{
 			Name:    "create-user",
 			Aliases: []string{"uc"},
 			Usage:   "Create a new User",
+			Flags: []cli.Flag {
+				&cli.StringFlag{
+					Name: "password",
+					Value: "pass1234",
+					Usage: "Password for new User",
+				},
+			},
 			Action: func(c *cli.Context) error {
 				cc, uc := client.NewUsersClient()
 				defer cc.Close()
 				if c.NArg() < 1 {
 					return errors.New("Not Enough arguments to create user. provide username")
 				}
-				user := client.CreateUser(uc, c.Args().Get(0))
+				user := client.CreateUser(uc, c.Args().Get(0), c.String("password"))
 				log.Printf("Response from server:\n%v\n", string(user))
 				return nil
 			},
