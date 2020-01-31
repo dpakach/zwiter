@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/dpakach/zwiter/auth/authpb"
-	"github.com/dpakach/zwiter/store"
 	"github.com/dpakach/zwiter/client"
+	"github.com/dpakach/zwiter/store"
 
 	"google.golang.org/grpc"
 
@@ -56,6 +56,17 @@ func (p *Tokens) GetByID(id int64) *Token {
 	p.ReadFromDb()
 	for _, item := range p.Tokens {
 		if item.ID == int64(id) {
+			return &item
+		}
+	}
+	return nil
+}
+
+// GetToken returns Post with given ID
+func (p *Tokens) GetToken(token string) *Token {
+	p.ReadFromDb()
+	for _, item := range p.Tokens {
+		if item.Token == token {
 			return &item
 		}
 	}
@@ -141,6 +152,25 @@ func (s *server) CreateToken(ctx context.Context, req *authpb.CreateTokenRequest
 		Token:     createdToken.Token,
 		Expires:   createdToken.Expires,
 		Username:  createdToken.Username,
+	}, nil
+}
+
+func (s *server) ValidateToken(ctx context.Context, req *authpb.ValidateTokenRequest) (*authpb.ValidateTokenResponse, error) {
+
+	tokens := new(Tokens)
+	tokens.ReadFromDb()
+
+	token := tokens.GetToken(req.GetToken())
+
+	if token == nil {
+		return &authpb.ValidateTokenResponse{
+			Valid: false,
+		}, nil
+	}
+
+	return &authpb.ValidateTokenResponse{
+		Valid: true,
+		Username: token.Username,
 	}, nil
 }
 

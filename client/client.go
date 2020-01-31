@@ -58,11 +58,11 @@ func getAddr(service string) string {
 // https://godoc.org/golang.org/x/oauth2
 func fetchToken() *oauth2.Token {
 	return &oauth2.Token{
-		AccessToken: "some-secret-token",
+		AccessToken: os.Getenv("ACCESS_TOKEN"),
 	}
 }
 
-func getOpts() []grpc.DialOption {
+func getOpts(tokenNeeded bool) []grpc.DialOption {
 	// Set up the credentials for the connection.
 	perRPC := oauth.NewOauthAccess(fetchToken())
 	creds, err := credentials.NewClientTLSFromFile(testdata.Path("ca.pem"), "x.test.youtube.com")
@@ -70,22 +70,29 @@ func getOpts() []grpc.DialOption {
 		log.Fatalf("failed to load credentials: %v", err)
 	}
 	opts := []grpc.DialOption{
-		// In addition to the following grpc.DialOption, callers may also use
-		// the grpc.CallOption grpc.PerRPCCredentials with the RPC invocation
-		// itself.
-		// See: https://godoc.org/google.golang.org/grpc#PerRPCCredentials
-		grpc.WithPerRPCCredentials(perRPC),
+
 		// oauth.NewOauthAccess requires the configuration of transport
 		// credentials.
 		grpc.WithTransportCredentials(creds),
 	}
+	if tokenNeeded {
+		opts = append(
+			opts,
+			// In addition to the following grpc.DialOption, callers may also use
+			// the grpc.CallOption grpc.PerRPCCredentials with the RPC invocation
+			// itself.
+			// See: https://godoc.org/google.golang.org/grpc#PerRPCCredentials
+			grpc.WithPerRPCCredentials(perRPC),
+		)
+	}
+
 	return opts
 }
 
 // NewPostsClient creates new client for Post service
 func NewPostsClient() (*grpc.ClientConn, postspb.PostsServiceClient) {
 	addr := getAddr("posts")
-	opts := getOpts()
+	opts := getOpts(true)
 	cc, err := grpc.Dial(addr, opts...)
 	if err != nil {
 		log.Fatal(err)
@@ -96,7 +103,7 @@ func NewPostsClient() (*grpc.ClientConn, postspb.PostsServiceClient) {
 // NewUsersClient creates a new client for the users service
 func NewUsersClient() (*grpc.ClientConn, userspb.UsersServiceClient) {
 	addr := getAddr("users")
-	opts := getOpts()
+	opts := getOpts(true)
 	cc, err := grpc.Dial(addr, opts...)
 	if err != nil {
 		log.Fatal(err)
@@ -199,10 +206,9 @@ func Authenticate(c userspb.UsersServiceClient, username string, password string
 		log.Fatal(err)
 	}
 	return res.Auth
-	//return getJSON(res)
 }
 
-// CreatePost create a new post
+// CreateToken creates a new token
 func CreateToken(c authpb.AuthServiceClient, username string, password string) []byte {
 	req := &authpb.CreateTokenRequest{
 		Username:     username,
@@ -214,6 +220,19 @@ func CreateToken(c authpb.AuthServiceClient, username string, password string) [
 		log.Fatal(err)
 	}
 	return getJSON(res)
+}
+
+// ValidateToken validates token
+func ValidateToken(c authpb.AuthServiceClient, token string) *authpb.ValidateTokenResponse {
+	req := &authpb.ValidateTokenRequest{
+		Token:     token,
+	}
+
+	res, err := c.ValidateToken(context.Background(), req)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return res
 }
 
 func getJSON(res interface{}) []byte {

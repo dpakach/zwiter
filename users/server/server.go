@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dpakach/zwiter/client"
 	"github.com/dpakach/zwiter/store"
 	"github.com/dpakach/zwiter/users/userspb"
 
@@ -205,7 +206,12 @@ func valid(authorization []string) bool {
 	// Perform the token validation here. For the sake of this example, the code
 	// here forgoes any of the usual OAuth2 token validation and instead checks
 	// for a token matching an arbitrary string.
-	return token == "some-secret-token"
+
+	cc, ac := client.NewAuthClient()
+	defer cc.Close()
+	res := client.ValidateToken(ac, token)
+
+	return res.Valid
 }
 
 // ensureValidToken ensures a valid token exists within a request's metadata. If

@@ -15,6 +15,17 @@ message CreateTokenResponse {
 	string username=3;
 }
 
+message ValidateTokenRequest {
+	string token=1;
+}
+
+message ValidateTokenResponse {
+	bool valid=1;
+	string username=2;
+	int64 userid=3;
+}
+
 service AuthService {
 	rpc CreateToken(CreateTokenRequest) returns (CreateTokenResponse) {};
+	rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse) {};
 }
