@@ -127,6 +127,13 @@ func NewSHA256(data string) string {
 type server struct{}
 
 func (s *server) CreateUser(ctx context.Context, req *userspb.CreateUserRequest) (*userspb.CreateUserResponse, error) {
+	users := new(Users)
+	users.ReadFromDb()
+
+	check := users.GetByUsername(req.GetUsername())
+	if check != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Username already taken")
+	}
 	ts := time.Now().Unix()
 	user := User{Username: req.GetUsername(), Created: int64(ts), Password: NewSHA256(req.GetPassword())}
 	id := user.SaveToStore(UserStore)
@@ -161,6 +168,9 @@ func (s *server) GetUser(ctx context.Context, req *userspb.GetUserRequest) (*use
 	users := new(Users)
 	users.ReadFromDb()
 	user := users.GetByID(req.GetId())
+	if user == nil {
+		return nil, status.Error(codes.InvalidArgument, "User with given id doesn't exist")
+	}
 	return &userspb.GetUserResponse{
 		Id:       user.ID,
 		Username: user.Username,

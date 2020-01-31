@@ -113,7 +113,10 @@ type server struct{}
 func (s *server) CreatePost(ctx context.Context, req *postspb.CreatePostRequest) (*postspb.CreatePostResponse, error) {
 	ts := time.Now().Unix()
 	post := Post{Title: req.GetText(), Created: int64(ts)}
-	user := getUserByID(req.GetAuthorId())
+	user, err := getUserByID(req.GetAuthorId())
+	if err != nil {
+		return nil, err
+	}
 
 	post.Author = req.GetAuthorId()
 	id := post.SaveToStore(PostStore)
@@ -129,15 +132,15 @@ func (s *server) CreatePost(ctx context.Context, req *postspb.CreatePostRequest)
 	}, nil
 }
 
-func getUserByID(id int64) *userspb.GetUserResponse {
+func getUserByID(id int64) (*userspb.GetUserResponse, error) {
 	cc, c := client.NewUsersClient()
 	defer cc.Close()
 	userReq := &userspb.GetUserRequest{Id: id}
 	user, err := c.GetUser(context.Background(), userReq)
 	if err != nil {
-		log.Fatalf("Couldnot Resolve user with given Id: %v\n Error: %v", id, err)
+		return nil, err
 	}
-	return user
+	return user, nil
 }
 
 func (s *server) GetPosts(ctx context.Context, req *postspb.EmptyData) (*postspb.GetPostsResponse, error) {
@@ -145,7 +148,11 @@ func (s *server) GetPosts(ctx context.Context, req *postspb.EmptyData) (*postspb
 	posts.ReadFromDb()
 	resp := []*postspb.GetPostsResponse_Post{}
 	for _, post := range (*posts).Posts {
-		user := getUserByID(post.Author)
+		user, err := getUserByID(post.Author)
+		if err != nil {
+			return nil, err
+		}
+
 		resp = append(resp, &postspb.GetPostsResponse_Post{
 			Id:      post.ID,
 			Text:    post.Title,
@@ -165,7 +172,10 @@ func (s *server) GetPost(ctx context.Context, req *postspb.GetPostRequest) (*pos
 	posts := new(Posts)
 	posts.ReadFromDb()
 	post := posts.GetByID(req.GetId())
-	user := getUserByID(post.Author)
+	user, err := getUserByID(post.Author)
+	if err != nil {
+		return nil, err
+	}
 
 	return &postspb.GetPostResponse{
 		Id:      post.ID,
