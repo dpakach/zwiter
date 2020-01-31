@@ -13,8 +13,12 @@ import (
 
 	"github.com/dpakach/zwiter/auth/authpb"
 	"github.com/dpakach/zwiter/store"
+	"github.com/dpakach/zwiter/client"
 
 	"google.golang.org/grpc"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // Posts type for Users List
@@ -71,9 +75,10 @@ func (p *Tokens) NewID() int64 {
 
 // Post type for a Post Instance
 type Token struct {
-	ID      int64  `json:"id"`
-	Token   string `json:"token"`
-	Expires int64  `json:"expires"`
+	ID        int64  `json:"id"`
+	Token     string `json:"token"`
+	Expires   int64  `json:"expires"`
+	Username  string `josn:"-"`
 }
 
 // GetID returns ID of the Post
@@ -97,9 +102,14 @@ func (p *Token) SaveToStore(store *store.Store) int64 {
 }
 
 func NewUUID() string {
-	res := make([]byte, 20)
-	rand.Read(res)
-	return string(res)
+	b := make([]byte, 16)
+	_, err := rand.Read(b)
+	if err != nil {
+		log.Fatal(err)
+	}
+	uuid := fmt.Sprintf("%x-%x-%x-%x-%x",
+		b[0:4], b[4:6], b[6:8], b[8:10], b[10:])
+	return uuid
 }
 
 // PostStore is database Instance of posts
@@ -108,16 +118,29 @@ var TokenStore = store.New("posts")
 type server struct{}
 
 func (s *server) CreateToken(ctx context.Context, req *authpb.CreateTokenRequest) (*authpb.CreateTokenResponse, error) {
+
+	cc, uc := client.NewUsersClient()
+	defer cc.Close()
+
+	res := client.Authenticate(uc, req.GetUsername(), req.GetPassword())
+	if res != true {
+		return nil, status.Errorf(codes.Unauthenticated, "Invalid Username and password")
+	}
 	ts := time.Now().Unix() + 3600
-	token := Token{Token: NewUUID(), Expires: int64(ts)}
+	token := Token{
+		Token: NewUUID(),
+		Expires: int64(ts),
+		Username: req.GetUsername(),
+	}
 	id := token.SaveToStore(TokenStore)
 	created := &Tokens{}
 	created.ReadFromDb()
-	createdPost := created.GetByID(id)
+	createdToken := created.GetByID(id)
 
 	return &authpb.CreateTokenResponse{
-		Token:     createdPost.Token,
-		Expires:   createdPost.Expires,
+		Token:     createdToken.Token,
+		Expires:   createdToken.Expires,
+		Username:  createdToken.Username,
 	}, nil
 }
 

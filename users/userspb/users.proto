@@ -36,8 +36,17 @@ message GetUserResponse {
 	int64 created=3;
 }
 
+message AuthenticateRequest {
+	string username=1;
+	string password=2;
+}
+
+message AuthenticateResponse {
+	bool Auth=1;
+}
 service UsersService {
 	rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {};
 	rpc GetUsers(EmptyData) returns (GetUsersResponse) {};
 	rpc GetUser(GetUserRequest) returns (GetUserResponse) {};
+	rpc Authenticate(AuthenticateRequest) returns (AuthenticateResponse) {};
 }

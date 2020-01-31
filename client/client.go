@@ -188,6 +188,20 @@ func GetUser(c userspb.UsersServiceClient, id int64) []byte {
 	return getJSON(res)
 }
 
+// Authenticate verifies if username and password match
+func Authenticate(c userspb.UsersServiceClient, username string, password string) bool {
+	req := &userspb.AuthenticateRequest{
+		Username: username,
+		Password: password,
+	}
+	res, err := c.Authenticate(context.Background(), req)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return res.Auth
+	//return getJSON(res)
+}
+
 // CreatePost create a new post
 func CreateToken(c authpb.AuthServiceClient, username string, password string) []byte {
 	req := &authpb.CreateTokenRequest{

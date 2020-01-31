@@ -68,6 +68,17 @@ func (p *Users) GetByID(id int64) *User {
 	return nil
 }
 
+// GetByID returns a user with given ID from the database instance
+func (p *Users) GetByUsername(username string) *User {
+	p.ReadFromDb()
+	for _, item := range p.Users {
+		if item.Username == username {
+			return &item
+		}
+	}
+	return nil
+}
+
 // NewID returns a new ID for creating new database object
 func (p *Users) NewID() int64 {
 	id := int64(0)
@@ -110,7 +121,7 @@ func (p *User) SaveToStore(store *store.Store) int64 {
 // NewSHA256 ...
 func NewSHA256(data string) string {
 	hash := sha256.Sum256([]byte(data))
-	return string(hash[:])
+	return fmt.Sprintf("%x\n", hash)
 }
 
 type server struct{}
@@ -154,6 +165,19 @@ func (s *server) GetUser(ctx context.Context, req *userspb.GetUserRequest) (*use
 		Id:       user.ID,
 		Username: user.Username,
 		Created:  user.Created,
+	}, nil
+}
+
+func (s *server) Authenticate(ctx context.Context, req *userspb.AuthenticateRequest) (*userspb.AuthenticateResponse, error) {
+	users := new(Users)
+	users.ReadFromDb()
+	user := users.GetByUsername(req.GetUsername())
+
+	newhash := NewSHA256(req.GetPassword())
+	auth := newhash == user.Password
+
+	return &userspb.AuthenticateResponse{
+		Auth: auth,
 	}, nil
 }
 
