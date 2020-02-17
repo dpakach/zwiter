@@ -222,7 +222,7 @@ func main() {
 	log.Printf("Setting Store file path to: %v\n", abs)
 	UserStore.SetFilePath(abs)
 
-	log.Println("Starting Posts server on port 8002")
+	log.Println("Starting Users server on port 8002")
 	lis, err := net.Listen("tcp", "0.0.0.0:8002")
 	if err != nil {
 		log.Fatal(err)
