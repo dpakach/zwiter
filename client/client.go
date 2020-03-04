@@ -125,7 +125,6 @@ func NewAuthClient() (*grpc.ClientConn, authpb.AuthServiceClient) {
 func CreatePost(c postspb.PostsServiceClient, content string) []byte {
 	req := &postspb.CreatePostRequest{
 		Text:     content,
-		AuthorId: 1,
 	}
 
 	res, err := c.CreatePost(context.Background(), req)
@@ -196,7 +195,7 @@ func GetUser(c userspb.UsersServiceClient, id int64) []byte {
 }
 
 // Authenticate verifies if username and password match
-func Authenticate(c userspb.UsersServiceClient, username string, password string) bool {
+func Authenticate(c userspb.UsersServiceClient, username string, password string) *userspb.AuthenticateResponse {
 	req := &userspb.AuthenticateRequest{
 		Username: username,
 		Password: password,
@@ -205,7 +204,7 @@ func Authenticate(c userspb.UsersServiceClient, username string, password string
 	if err != nil {
 		log.Fatal(err)
 	}
-	return res.Auth
+	return res
 }
 
 // CreateToken creates a new token

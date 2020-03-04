@@ -184,11 +184,19 @@ func (s *server) Authenticate(ctx context.Context, req *userspb.AuthenticateRequ
 	users.ReadFromDb()
 	user := users.GetByUsername(req.GetUsername())
 
+	if user == nil {
+		return &userspb.AuthenticateResponse{
+			Auth: false,
+			Userid: 0,
+		}, nil
+	}
+
 	newhash := NewSHA256(req.GetPassword())
 	auth := newhash == user.Password
 
 	return &userspb.AuthenticateResponse{
 		Auth: auth,
+		Userid: user.GetID(),
 	}, nil
 }
 
@@ -219,6 +227,9 @@ func valid(authorization []string) bool {
 // handler and returns an error. Otherwise, the interceptor invokes the unary
 // handler.
 func ensureValidToken(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	if info.FullMethod == "/userspb.UsersService/CreateUser" {
+		return handler(ctx, req)
+	}
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return nil, errMissingMetadata
@@ -241,7 +252,7 @@ func getOpts() []grpc.ServerOption {
 		// The following grpc.ServerOption adds an interceptor for all unary
 		// RPCs. To configure an interceptor for streaming RPCs, see:
 		// https://godoc.org/google.golang.org/grpc#StreamInterceptor
-		grpc.UnaryInterceptor(ensureValidToken),
+		//grpc.UnaryInterceptor(ensureValidToken),
 		// Enable TLS for all incoming connections.
 		grpc.Creds(credentials.NewServerTLSFromCert(&cert)),
 	}

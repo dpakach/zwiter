@@ -43,6 +43,7 @@ message AuthenticateRequest {
 
 message AuthenticateResponse {
 	bool Auth=1;
+	int64 userid=2;
 }
 service UsersService {
 	rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {};

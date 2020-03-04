@@ -1,8 +1,8 @@
 .PHONY: server-post server-user server-all initialize-users users posts build build-client
 
-POSTS_FILE = posts.json
-USERS_FILE = users.json
-TOKENS_FILE = tokens.json
+POSTS_FILE = data/posts.json
+USERS_FILE = data/users.json
+TOKENS_FILE = data/tokens.json
 
 build:
 	@go build -o ./build/posts posts/server/server.go
@@ -12,13 +12,13 @@ build-client:
 	@go build -o ./build/zclient cmd/zclient/main.go
 
 posts: build
-	./build/posts posts.json
+	./build/posts data/posts.json
 
 users: build
-	./build/users users.json
+	./build/users data/users.json
 
 auth: build
-	./build/users tokens.json
+	./build/users data/tokens.json
 
 server-post:
 	go run posts/server/server.go $(POSTS_FILE)

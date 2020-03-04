@@ -90,6 +90,7 @@ type Token struct {
 	Token     string `json:"token"`
 	Expires   int64  `json:"expires"`
 	Username  string `josn:"-"`
+	Userid    int64  `json:"userid"`
 }
 
 // GetID returns ID of the Post
@@ -134,7 +135,7 @@ func (s *server) CreateToken(ctx context.Context, req *authpb.CreateTokenRequest
 	defer cc.Close()
 
 	res := client.Authenticate(uc, req.GetUsername(), req.GetPassword())
-	if res != true {
+	if res.Auth != true {
 		return nil, status.Errorf(codes.Unauthenticated, "Invalid Username and password")
 	}
 	ts := time.Now().Unix() + 3600
@@ -142,6 +143,7 @@ func (s *server) CreateToken(ctx context.Context, req *authpb.CreateTokenRequest
 		Token: NewUUID(),
 		Expires: int64(ts),
 		Username: req.GetUsername(),
+		Userid: res.Userid,
 	}
 	id := token.SaveToStore(TokenStore)
 	created := &Tokens{}
@@ -171,6 +173,7 @@ func (s *server) ValidateToken(ctx context.Context, req *authpb.ValidateTokenReq
 	return &authpb.ValidateTokenResponse{
 		Valid: true,
 		Username: token.Username,
+		Userid: token.Userid,
 	}, nil
 }
 

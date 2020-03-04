@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -113,12 +114,17 @@ type server struct{}
 func (s *server) CreatePost(ctx context.Context, req *postspb.CreatePostRequest) (*postspb.CreatePostResponse, error) {
 	ts := time.Now().Unix()
 	post := Post{Title: req.GetText(), Created: int64(ts)}
-	user, err := getUserByID(req.GetAuthorId())
+	userid, ok := ctx.Value("userid").(int64)
+	if !ok {
+		return nil, errors.New("Invalid userid")
+	}
+	user, err := getUserByID(userid)
 	if err != nil {
 		return nil, err
 	}
 
-	post.Author = req.GetAuthorId()
+
+	post.Author = userid
 	id := post.SaveToStore(PostStore)
 	created := &Posts{}
 	created.ReadFromDb()
@@ -194,15 +200,19 @@ var (
 )
 
 // valid validates the authorization.
-func valid(authorization []string) bool {
+func valid(authorization []string) (bool, int64) {
 	if len(authorization) < 1 {
-		return false
+		return false, 0
 	}
 	token := strings.TrimPrefix(authorization[0], "Bearer ")
 	// Perform the token validation here. For the sake of this example, the code
 	// here forgoes any of the usual OAuth2 token validation and instead checks
 	// for a token matching an arbitrary string.
-	return token == "some-secret-token"
+	cc, ac := client.NewAuthClient()
+	defer cc.Close()
+	res := client.ValidateToken(ac, token)
+
+	return res.Valid, res.GetUserid()
 }
 
 // ensureValidToken ensures a valid token exists within a request's metadata. If
@@ -216,11 +226,13 @@ func ensureValidToken(ctx context.Context, req interface{}, info *grpc.UnaryServ
 	}
 	// The keys within metadata.MD are normalized to lowercase.
 	// See: https://godoc.org/google.golang.org/grpc/metadata#New
-	if !valid(md["authorization"]) {
+	isValid, id := valid(md["authorization"])
+	if !isValid {
 		return nil, errInvalidToken
 	}
+	c := context.WithValue(ctx, "userid", id)
 	// Continue execution of handler after ensuring a valid token.
-	return handler(ctx, req)
+	return handler(c, req)
 }
 
 func getOpts() []grpc.ServerOption {
