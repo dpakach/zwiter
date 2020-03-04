@@ -1,7 +1,7 @@
 .PHONY: server-post server-user server-all initialize-users users posts build build-client
 
-POSTS_FILE = posts.json
-USERS_FILE = users.json
+POSTS_FILE ?= /var/tmp/storeData/posts.json
+USERS_FILE ?= /var/tmp/storeData/users.json
 
 build:
 	@go build -o ./build/posts posts/server/server.go
@@ -31,12 +31,16 @@ generate-pb:
 	protoc ./users/userspb/users.proto --go_out=plugins=grpc:.
 
 initialize-posts:
+	echo $POSTS_FILE
+	mkdir -p "/var/tmp/storeData"
 	@if test -f $(POSTS_FILE); then \
 		> $(POSTS_FILE); \
 	fi; \
 	echo "{\"posts\": []}" >> $(POSTS_FILE);
 
 initialize-users:
+	echo $USERS_FILE
+	mkdir -p "/var/tmp/storeData"
 	@if test -f $(USERS_FILE); then \
 		> $(USERS_FILE); \
 	fi; \

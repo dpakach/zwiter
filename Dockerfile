@@ -7,6 +7,11 @@ ENV USER_HOST zusers
 ENV USER_PORT 8002
 ENV POST_HOST zposts
 ENV POST_PORT 8001
+# ENV POSTS_FILE posts.json
+# ENV USERS_FILE users.json
+
+RUN echo $POSTS_FILE
+RUN echo $USERS_FILE
 
 
 # Configure GOPATH and project path

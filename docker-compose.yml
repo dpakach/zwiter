@@ -6,15 +6,21 @@ services:
             - "8002:8002"
         environment:
             - service=users
+            - POSTS_FILE="/var/tmp/storeData/posts.json"
         networks:
             - isc
+        volumes:
+            - /var/tmp/storeData:/var/tmp/storeData
     zposts:
         build: .
         ports:
             - "8001:8001"
         environment:
             - service=posts
+            - USERS_FILE="/var/tmp/storeData/posts.json"
         networks:
             - isc
+        volumes:
+            - /var/tmp/storeData:/var/tmp/storeData
 networks:
   isc:
