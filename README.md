@@ -1,3 +1,6 @@
+## Visit https://github.com/dpakach/zwitter
+this project has been replaced with a better updated implementation at https://github.com/dpakach/zwitter
+
 # zwiter
 Zwiter is a very simple system with different services for `users` and `posts` using simple json files for data storage and grpc and protocol buffers for communication between the services
 
